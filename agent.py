@@ -1,0 +1,47 @@
+# ... (existing)
+
+from langsmith import Client
+from langchain.callbacks import StdOutCallbackHandler, LangSmithCallbackHandler? No, use traceable
+
+# LangSmith setup
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT", "LyricBeats")  # Your project
+client = Client()  # For custom runs if needed
+
+# In nodes, add callback
+def plan_node(state: AgentState) -> AgentState:
+    # ...
+    chain = prompt | llm_with_tools  # Auto-traces
+    # Or explicit: chain.invoke(..., callbacks=[LangSmithCallbackHandler()])
+    # ...
+
+# Add new state fields
+class AgentState(TypedDict):
+    # ... (existing)
+    file_format: str
+    instrument_pic: str | None
+    instrument_video: str | None
+    title: str  # For viz
+
+# New node for viz
+def generate_viz_node(state: AgentState) -> AgentState:
+    if state["file_format"] in ['simple_mp4', 'high_mp4']:
+        viz_path = generate_visual_mp4.invoke({
+            "audio_path": state["messages"][-1].content,  # From gen1
+            "file_format": state["file_format"],
+            "pic": state["instrument_pic"],
+            "video": state["instrument_video"],
+            "title": state["title"],
+            "lyrics": state["lyrics"].split('.'),  # Sentences
+            "user_id": state["user_id"]
+        })
+        state["messages"] += [HumanMessage(content=f"Viz MP4: {viz_path}")]
+    return state
+
+# Update graph: Add edge plan -> generate_v1 -> blend_v2 (if audio) -> generate_viz -> store
+workflow.add_node("generate_viz", generate_viz_node)
+workflow.add_edge("blend_v2", "generate_viz")
+workflow.add_edge("generate_viz", "store")
+
+# Compile with checkpointer (traces all runs)
+app = workflow.compile(checkpointer=memory)  # LangSmith auto-instruments

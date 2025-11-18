@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  <!-- Mobile fit -->
+    <title>LyricBeats AI</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">  <!-- Bootstrap responsive -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="bg-dark text-light">
+    <div class="container-fluid p-3">
+        <h1 class="text-center mb-4">Generate Music from Lyrics</h1>
+        <form id="genForm" class="row g-3 needs-validation" novalidate>
+            <div class="col-12">
+                <label class="form-label">User ID:</label>
+                <input type="text" class="form-control" id="user_id" value="user1" required>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Lyrics (max 6000 chars):</label>
+                <textarea class="form-control" id="lyrics" rows="5" maxlength="6000" required></textarea>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Choose Tracks (Genre):</label>
+                <select class="form-select" id="genre">
+                    <option value="pop">Pop</option>
+                    <option value="r&b">R&B</option>
+                    <option value="hip-hop">Hip-Hop</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Choose Voice:</label>
+                <select class="form-select" id="voice_type">
+                    <option value="Male Rapper">Male Rapper</option>
+                    <option value="Female Soulful">Female Soulful</option>
+                    <option value="Neutral Pop">Neutral Pop</option>
+                </select>
+            </div>
+            <div class="col-12">
+                <label class="form-label">Choose File:</label>
+                <select class="form-select" id="file_format" onchange="toggleInstrument()">
+                    <option value="mp3">.mp3 (Simple MP3 Music)</option>
+                    <option value="wav">.wav (High Quality WAV)</option>
+                    <option value="simple_mp4">.simple_mp4 (WAV + Picture/Soundwave)</option>
+                    <option value="high_mp4">.high_mp4 (MP3 + Video Blend)</option>
+                </select>
+            </div>
+            <div id="instrument_div" class="col-12" style="display:none;">
+                <label class="form-label">Choose Instrument:</label>
+                <div class="row">
+                    <div class="col-md-6">
+                        <select class="form-select" id="file1">
+                            <option value="auto">Auto-Select Picture from Drive/Online</option>
+                            <!-- LLM populates or Drive list -->
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <select class="form-select" id="file2">
+                            <option value="auto">Auto-Select Video from Drive/Online</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary w-100">Generate</button>
+            </div>
+        </form>
+        <div id="result" class="mt-4"></div>
+
+        <!-- Header: Soundwave + Title (JS canvas) -->
+        <div id="header-viz" class="row mt-3" style="display:none;">
+            <canvas id="soundwave" class="img-fluid"></canvas>
+            <h2 id="music-title" class="text-center"></h2>
+        </div>
+        <!-- Footer: Lyrics Scroller -->
+        <div id="footer-lyrics" class="row fixed-bottom bg-secondary p-2" style="display:none;">
+            <p id="lyrics-scroll" class="text-center">Lyrics will scroll here sentence-by-sentence...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        function toggleInstrument() {
+            const format = document.getElementById('file_format').value;
+            document.getElementById('instrument_div').style.display = (format.includes('_mp4')) ? 'block' : 'none';
+        }
+        // Form submit (existing AJAX + new fields)
+        $("#genForm").submit(function(e) {
+            e.preventDefault();
+            const data = {
+                // ... existing
+                file_format: $("#file_format").val(),
+                instrument_pic: $("#file1").val(),
+                instrument_video: $("#file2").val()
+            };
+            $.post("/generate", JSON.stringify(data), function(resp) {
+                $("#result").html(/* ... + links */);
+                if (resp.version2) { /* Show viz */ }
+            });
+        });
+        // Soundwave JS (Web Audio API placeholder)
+        // Lyrics scroll: Animate sentences
+    </script>
+</body>
+</html>
