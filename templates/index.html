@@ -1,0 +1,105 @@
+<--! # 1. Replace the entire index.html with the 100% working version -->
+<--! cat > templates/index.html << 'EOF' -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LyricBeats AI - Music + Video Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #111; color: #0f0; font-family: 'Courier New', monospace; }
+        .card { background: #222; border: 1px solid #0f0; }
+        #result { min-height: 100px; }
+        #loading { display: none; }
+    </style>
+</head>
+<body class="p-4">
+<div class="container">
+    <h1 class="text-center mb-5">LyricBeats AI</h1>
+    <div class="card p-4">
+        <form id="genForm">
+            <div class="mb-3"><input type="text" class="form-control" id="user_id" value="user1" placeholder="User ID" required></div>
+            <div class="mb-3"><input type="text" class="form-control" id="title" placeholder="Song Name" required></div>
+            <div class="mb-3"><textarea class="form-control" id="lyrics" rows="8" placeholder="Paste your lyrics here (max 6000 chars)" required></textarea></div>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" id="genre">
+                        <option value="pop">Pop</option>
+                        <option value="r&b">R&B</option>
+                        <option value="hip-hop" selected>Hip-Hop</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" id="voice_type">
+                        <option value="Male Rapper" selected>Male Rapper</option>
+                        <option value="Female Soulful">Female Soulful</option>
+                        <option value="Neutral Pop">Neutral Pop</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <select class="form-select" id="file_format" onchange="toggleInstrument()">
+                        <option value="mp3">.mp3 (Simple)</option>
+                        <option value="wav">.wav (High Quality)</option>
+                        <option value="simple_mp4">.simple_mp4 (Picture + Wave)</option>
+                        <option value="high_mp4" selected>.high_mp4 (Video Blend)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="instrument_div" class="mb-3">
+                <label>Instrument Assets (auto = search online + your Drive)</label>
+                <div class="row">
+                    <div class="col"><select class="form-select" id="file1" multiple size="3"><option value="auto" selected>Auto Pictures</option></select></div>
+                    <div class="col"><select class="form-select" id="file2" multiple size="3"><option value="auto" selected>Auto Videos</option></select></div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success btn-lg w-100">GENERATE MUSIC + VIDEO</button>
+        </form>
+        <div id="loading" class="text-center mt-4"><h3>Generating... This can take 1–4 minutes</h3><div class="spinner-border text-success"></div></div>
+        <div id="result" class="mt-4"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleInstrument() {
+    document.getElementById('instrument_div').style.display = 
+        document.getElementById('file_format').value.includes('mp4') ? 'block' : 'none';
+}
+toggleInstrument();
+
+document.getElementById('genForm').onsubmit = async (e) => {
+    e.preventDefault();
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('result').innerHTML = '';
+
+    const data = {
+        user_id: document.getElementById('user_id').value,
+        title: document.getElementById('title').value,
+        lyrics: document.getElementById('lyrics').value,
+        genre: document.getElementById('genre').value,
+        voice_type: document.getElementById('voice_type').value,
+        file_format: document.getElementById('file_format').value,
+        instrument_pics: Array.from(document.getElementById('file1').selectedOptions).map(o=>o.value),
+        instrument_videos: Array.from(document.getElementById('file2').selectedOptions).map(o=>o.value)
+    };
+
+    const resp = await fetch('/generate', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    });
+
+    const result = await resp.json();
+    document.getElementById('loading').style.display = 'none';
+
+    let html = `<h3 class="text-success">DONE!</h3>`;
+    if (result.version1) html += `<p>Version 1: <a href="/download/${result.version1}" class="btn btn-primary" download>Download V1</a></p>`;
+    if (result.version2) html += `<p>Final Music Video: <a href="/download/${result.version2}" class="btn btn-success btn-lg" download>Download Final MP4</a></p>`;
+    if (result.trace_url) html += `<p>LangSmith Trace: <a href="${result.trace_url}" target="_blank">View in LangSmith</a></p>`;
+
+    document.getElementById('result').innerHTML = html;
+};
+</script>
+</body>
+</html>
