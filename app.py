@@ -17,7 +17,9 @@ def download(filename):
 def generate():
     # ... (existing)
     # In stream: Traces graph invocations
-    return jsonify({... , "trace_id": "view in LangSmith"})  # Optional
+    #return jsonify({... , "trace_id": "view in LangSmith"})  # Optional
+    return jsonify({"message": "Generation started", "status": "processing"})
 
 if __name__ == "__main__":
+
     app.run(debug=True)
