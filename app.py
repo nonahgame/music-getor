@@ -23,6 +23,7 @@ def generate():
 """
 
 @app.route("/generate", methods=["POST"])
+@traceable
 def generate():
     data = request.get_json()
     # Just a dummy response for now — real agent will be added next
@@ -40,4 +41,5 @@ def generate():
 if __name__ == "__main__":
 
     app.run(debug=True)
+
 
