@@ -44,4 +44,5 @@ workflow.add_edge("blend_v2", "generate_viz")
 workflow.add_edge("generate_viz", "store")
 
 # Compile with checkpointer (traces all runs)
+
 app = workflow.compile(checkpointer=memory)  # LangSmith auto-instruments
