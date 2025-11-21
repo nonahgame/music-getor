@@ -1,5 +1,3 @@
-# 1. Full working app.py (REAL AI GENERATION)
-# cat > app.py << 'EOF'
 from flask import Flask, render_template, request, jsonify, send_from_directory
 from agent import run_agent
 import os
@@ -32,4 +30,3 @@ def generate():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
-# EOF
