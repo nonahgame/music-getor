@@ -1,4 +1,4 @@
-## cat > agent.py << 'EOF'
+## agent.py 
 import os
 import uuid
 import random
